@@ -1,0 +1,111 @@
+---
+title: "lab_10-1"
+author: "Olivia Dao, Liv Depies, Maddy Doak"
+date: "10/5/2019"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(readxl)       # To import excel sheet of data
+library(tidyverse)    # For data analysis and graphing
+```
+
+```{r, echo = FALSE}
+data <- read_excel('10-1_indep_project.xlsx')
+
+# Creating a new column with condition as a label
+new_vals <- character(nrow(data))
+for (i in 1:nrow(data)) {
+  if (data$Ca_conc[i] == '2 mM') {
+    if (data$Mg_conc[i] == '0.5 mM') {
+      new_vals[i] <- 'Standard'
+    } else if (data$Mg_conc[i] == '5 mM') {
+        new_vals[i] <- 'Standard/High Mg'
+    } 
+  } else if (data$Ca_conc[i] == '0.5 mM') {
+      new_vals[i] <- 'Low Ca/High Mg'
+  }
+}
+
+# Creating a copy of the data with the new condition column
+mod_data <- data
+mod_data$condition <- factor(new_vals, levels=c('Standard', 'Standard/High Mg', 'Low Ca/High Mg'))
+
+
+# Fixing the variables by removing units
+for (i in 1:nrow(mod_data)) {
+  mod_data$R_elec_MOhm[i] = strsplit(mod_data$R_elec[i], " ")[[1]]
+  mod_data$Ca_conc_mM[i] = strsplit(mod_data$Ca_conc[i], " ")[[1]]
+  mod_data$Mg_conc_mM[i] = strsplit(mod_data$Mg_conc[i], " ")[[1]]
+}
+
+# Getting median resting membrane potential by group
+mod_data %>% group_by(condition) %>% summarize(med_vm = median(Vm))
+
+# Getting range of time for data collection
+mod_data %>% summarize(time_spread = max(Time)-min(Time))
+
+# Doing significance tests to compare groups
+# Used http://www.sthda.com/english/wiki/kruskal-wallis-test-in-r
+vec <- c(mod_data$Vm, mod_data$condition)
+groups <- rep(c(1,2),times = c(length(mod_data$Vm),length(mod_data$condition)))
+kruskal.test(vec ~ groups)
+pairwise.wilcox.test(mod_data$Vm, mod_data$condition, p.adjust.method = "BH")
+
+# Stats from linear regresion model for Vm versus time
+time <- mod_data %>% filter(condition=='Standard') %>% lm(Vm ~ Time,.)
+summary(time)
+
+# Stats from linear regresion model for Vm versus time
+mod_data$R_elec_MOhm <- as.numeric(as.character(mod_data$R_elec_MOhm))
+resist <- mod_data %>% filter(condition=='Low Ca/High Mg') %>% lm(Vm ~ R_elec_MOhm,.)
+summary(resist)
+
+# Boxplot of Vm by condition
+mod_data %>%
+ggplot(aes(x = factor(condition), y = Vm)) +
+  geom_boxplot() +
+  labs(x='Condition',y='Vm (mV)') +
+  ggtitle('Resting membrane potential by saline condition') +
+  theme(plot.title = element_text(size=10),
+        text=element_text(family='serif'))
+ggsave('10-1_boxplot.png',device='png')
+
+# Scatterplot of Vm by time and group
+mod_data %>%
+ggplot(aes(x = Time, y = Vm, color = factor(condition))) +
+  geom_point() +
+  labs(x='Time of Day',y='Vm (mV)',color='Condition') +
+  ggtitle('Resting membrane potential over time by condition') +
+  theme(plot.title = element_text(size=10),
+        text=element_text(family='serif')) +
+  guides(fill=guide_legend(title="Condition"))
+ggsave('10-1_scatter.png',device='png')
+
+# Scatterplot of Vm by resistance and group
+mod_data %>%
+ggplot(aes(x = strtoi(R_elec_MOhm), y = Vm, color = factor(condition))) +
+  geom_point() +
+  labs(x='Resistance (MO)',y='Vm (mV)',color='Condition') +
+  ggtitle('Resting membrane potential versus resistance by condition') +
+  theme(plot.title = element_text(size=10),
+        text=element_text(family='serif'))
+ggsave('10-1_scatter-2.png',device='png')
+
+# Scatterplot of Vm by K concentration
+mod_data_k <- mod_data %>% group_by(condition) %>% mutate(K_conc_mM = if_else(condition == 'Standard' | condition == 'Standard/High Mg',2,22))
+mod_data_k %>% ggplot(aes(x = factor(K_conc_mM), y = Vm)) +
+  geom_boxplot() +
+  labs(x='Concentration K+ (mM)',y='Vm (mV)') +
+  ggtitle('Resting membrane potential by K+ concentration') +
+  theme(plot.title = element_text(size=10),
+        text=element_text(family='serif'))
+ggsave('10-1_box_2.png',device='png')
+
+# Test of K+ significance
+pairwise.wilcox.test(mod_data_k$Vm, mod_data_k$K_conc_mM, p.adjust.method = "BH")
+
+# Median Vm by K+ condition
+mod_data_k %>% group_by(K_conc_mM) %>% summarize(med_vm = median(Vm))
+```
