@@ -1,0 +1,17 @@
+---
+title: "group_IP"
+author: "Liv Depies, Maddy Doak, Michael Kuranty"
+date: "12/1/2019"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+
+file_extension <- "/media/maddy/Seagate Portable Drive/git/Bio_381/group_IP/excel_data/"
+data <- vector("list",5)
+for (num in 1:5) {
+  data[[num]] <- as_tibble(read_excel(paste(file_extension,"Data_",num,".xlsx",sep="")))
+}
+View(data)
+```
