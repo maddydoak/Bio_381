@@ -9,6 +9,8 @@ output: pdf_document
 library(tidyverse)
 library(BiocGenerics)
 
+# Importing data and renaming columns
+# Then adding columns for subject and trial numbers
 file_extension <- "/media/maddy/Seagate Portable Drive/git/Bio_381/group_IP/excel_data/"
 data <- vector("list",5)
 for (num in 1:5) {
@@ -18,7 +20,8 @@ for (num in 1:5) {
                              "Ch2_time_min","Ch3_mean", "Ch3_amp", "Ch3_time_max",
                              "Ch3_time_min", "Ch4_mean", "Ch4_amp", "Ch4_time_max",
                              "Ch4_time_min")
-  data[[num]] <- data[[num]] %>% mutate(subject = c(num), trial = c(NA))
+  data[[num]] <- data[[num]] %>% mutate(subject = c(num), phrase = c(NA), spoken = c("Yes"))
+  data[[num]] <- data[[num]][,c(1,18,19,20,2:17)]
 }
 
 # Removing header lines and non-trials
@@ -30,14 +33,18 @@ data[[3]] <- data[[3]][-c(142),]
 data[[4]] <- data[[4]][-c(1,2),]
 data[[4]] <- data[[4]][-c(158),]
 
-# Adding trial numbers (1-20)
+# Adding numbering for phrases/whether they're spoken or silent
 for (num in 1:5) {
   new_set <- which(grepl(paste("^","0","$",sep=""),data[[num]]$time))
   new_set <- append(new_set, length(data[[num]][[1]]))
   for (i in 1:20) {
-    data[[num]][new_set[[i]]:new_set[[i+1]],"trial"] <- i
+    if (i > 10) {
+      data[[num]][new_set[[i]]:new_set[[i+1]],"phrase"] <- i-10
+      data[[num]][new_set[[i]]:new_set[[i+1]],"spoken"] <- "No"
+    } else {
+      data[[num]][new_set[[i]]:new_set[[i+1]],"phrase"] <- i
+    }
   }
-  data[[num]] <- data[[num]][,c(1,18,19,2:17)]
 }
 
 # Combining all data into one dataframe
