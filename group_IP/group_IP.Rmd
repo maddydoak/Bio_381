@@ -6,7 +6,9 @@ output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
-library(tidyverse)
+library(readxl)
+library(dplyr)
+library(ggplot2)
 library(BiocGenerics)
 
 # Importing data and renaming columns
@@ -29,9 +31,12 @@ for (i in 2:5) {
   data[[i]] <- data[[i]][-c(1,2),]
 }
 data[[1]] <- data[[1]][-c(1),]
+data[[1]] <- data[[1]][-c(280:282,284:286),]
 data[[3]] <- data[[3]][-c(142),]
+data[[3]] <- data[[3]][-c(53:55,57:59),]
 data[[4]] <- data[[4]][-c(1,2),]
 data[[4]] <- data[[4]][-c(158),]
+data[[5]] <- data[[5]][-c(56:58,60:62),]
 
 # Adding numbering for phrases/whether they're spoken or silent
 for (num in 1:5) {
@@ -53,7 +58,132 @@ View(all_data)
 ```
 
 ```{r}
-plot1 <- ggplot(data[[1]],aes(x=factor(time),y=factor(Ch1_mean))) +
-  geom_point()
-plot1
+subj_labels <- c("Subject 1", "Subject 2", "Subject 3", "Subject 4", "Subject 5")
+names(subj_labels) <- c("1","2","3","4","5")
+
+# Channel 1
+p1_1 <- all_data %>% 
+  group_by(subject,phrase,spoken) %>%
+  filter(!is.na(Ch1_amp)) %>%
+  summarize(phrase_mean = mean(as.numeric(Ch1_amp),na.rm=TRUE)) %>%
+  ggplot(aes(x=factor(phrase),y=phrase_mean,fill=spoken)) +
+    geom_bar(position="dodge",stat="identity") +
+    facet_wrap(~ subject, ncol = 2, labeller = labeller(subject = subj_labels)) +
+    labs(x="Phrase Number",y="Mean Amplitude for Phrase (mV)",
+         title="Ch1: Mean Amplitude by Subject/Phrase/Vocalization Condition")
+png(file='ch1_mean_amp_by_conditions.png')
+p1_1
+dev.off()
+p1_2 <- all_data %>% 
+  group_by(subject,phrase,spoken) %>%
+  filter(!is.na(Ch1_amp)) %>%
+  summarize(phrase_mean = mean(as.numeric(Ch1_amp),na.rm=TRUE)) %>%
+  mutate(phrase_diff = phrase_mean - lag(phrase_mean)) %>%
+  ggplot(aes(x=factor(phrase),y=phrase_diff)) +
+    geom_bar(stat="identity") +
+    facet_wrap(~ subject, ncol = 2, labeller = labeller(subject = subj_labels)) +
+    labs(x="Phrase Number",y="Difference in Mean Amplitude (Spoken-Silent)",
+         title="Ch1: Difference in Mean Amplitude Between Conditions by Phrase")
+png(file='ch1_diff_mean_amp.png')
+p1_2
+dev.off()
+
+# Channel 2
+p2_1 <- all_data %>% 
+  group_by(subject,phrase,spoken) %>%
+  filter(!is.na(Ch2_amp)) %>%
+  summarize(phrase_mean = mean(as.numeric(Ch2_amp),na.rm=TRUE)) %>%
+  ggplot(aes(x=factor(phrase),y=phrase_mean,fill=spoken)) +
+    geom_bar(position="dodge",stat="identity") +
+    facet_wrap(~ subject, ncol = 2, labeller = labeller(subject = subj_labels)) +
+    labs(x="Phrase Number",y="Mean Amplitude for Phrase (mV)",
+         title="Ch2: Mean Amplitude by Subject/Phrase/Vocalization Condition")
+png(file='ch2_mean_amp_by_conditions.png')
+p2_1
+dev.off()
+p2_2 <- all_data %>% 
+  group_by(subject,phrase,spoken) %>%
+  filter(!is.na(Ch2_amp)) %>%
+  summarize(phrase_mean = mean(as.numeric(Ch2_amp),na.rm=TRUE)) %>%
+  mutate(phrase_diff = phrase_mean - lag(phrase_mean)) %>%
+  ggplot(aes(x=factor(phrase),y=phrase_diff)) +
+    geom_bar(stat="identity") +
+    facet_wrap(~ subject, ncol = 2, labeller = labeller(subject = subj_labels)) +
+    labs(x="Phrase Number",y="Difference in Mean Amplitude (Spoken-Silent)",
+         title="Ch2: Difference in Mean Amplitude Between Conditions by Phrase")
+png(file='ch2_diff_mean_amp.png')
+p2_2
+dev.off()
+
+# Channel 3
+p3 <- all_data %>% 
+  group_by(subject,phrase,spoken) %>%
+  filter(!is.na(Ch3_amp)) %>%
+  summarize(phrase_mean = mean(as.numeric(Ch3_amp),na.rm=TRUE))  %>%
+  mutate(phrase_diff = phrase_mean - lag(phrase_mean))
+p3_1 <- p3 %>% ggplot(aes(x=factor(phrase),y=phrase_mean,fill=spoken)) +
+    geom_bar(position="dodge",stat="identity") +
+    facet_wrap(~ subject, ncol = 2, labeller = labeller(subject = subj_labels)) +
+    labs(x="Phrase Number",y="Mean Amplitude for Phrase (mV)",
+         title="Ch3: Mean Amplitude by Subject/Phrase/Vocalization Condition")
+png(file='ch3_mean_amp_by_conditions.png')
+p3_1
+dev.off()
+p3_2 <- p3 %>% ggplot(aes(x=factor(phrase),y=phrase_diff)) +
+    geom_bar(stat="identity") +
+    facet_wrap(~ subject, ncol = 2, labeller = labeller(subject = subj_labels)) +
+    labs(x="Phrase Number",y="Difference in Mean Amplitude (Spoken-Silent)",
+         title="Ch3: Difference in Mean Amplitude Between Conditions by Phrase")
+png(file='ch3_diff_mean_amp.png')
+p3_2
+dev.off()
+
+# Channel 3, Subject 3
+p3_3 <- all_data %>% 
+  filter(subject==3) %>%
+  group_by(phrase,spoken) %>%
+  filter(!is.na(Ch3_amp)) %>%
+  summarize(phrase_mean = mean(as.numeric(Ch3_amp),na.rm=TRUE))  %>%
+  mutate(phrase_diff = phrase_mean - lag(phrase_mean))
+p3_3_1 <- p3_3 %>% ggplot(aes(x=factor(phrase),y=phrase_mean,fill=spoken)) +
+    geom_bar(position="dodge",stat="identity") +
+    labs(x="Phrase Number",y="Mean Amplitude for Phrase (mV)",
+         title="Ch3/Sbj3: Mean Amplitude by Phrase/Vocalization Condition")
+png(file='ch3_sbj3_mean_amp_by_conditions.png')
+p3_3_1
+dev.off()
+p3_3_2 <- p3_3 %>% ggplot(aes(x=factor(phrase),y=phrase_diff)) +
+    geom_bar(stat="identity") +
+    labs(x="Phrase Number",y="Difference in Mean Amplitude (Spoken-Silent)",
+         title="Ch3/Sbj3: Difference in Mean Amplitude Between Conditions by Phrase")
+png(file='ch3_sbj3_diff_mean_amp.png')
+p3_3_2
+dev.off()
+
+# Channel 4
+p4_1 <- all_data %>% 
+  group_by(subject,phrase,spoken) %>%
+  filter(!is.na(Ch4_amp)) %>%
+  summarize(phrase_mean = mean(as.numeric(Ch4_amp),na.rm=TRUE)) %>%
+  ggplot(aes(x=factor(phrase),y=phrase_mean,fill=spoken)) +
+    geom_bar(position="dodge",stat="identity") +
+    facet_wrap(~ subject, ncol = 2, labeller = labeller(subject = subj_labels)) +
+    labs(x="Phrase Number",y="Mean Amplitude for Phrase (mV)",
+         title="Ch4: Mean Amplitude by Subject/Phrase/Vocalization Condition")
+png(file='ch4_mean_amp_by_conditions.png')
+p4_1
+dev.off()
+p4_2 <- all_data %>% 
+  group_by(subject,phrase,spoken) %>%
+  filter(!is.na(Ch4_amp)) %>%
+  summarize(phrase_mean = mean(as.numeric(Ch4_amp),na.rm=TRUE)) %>%
+  mutate(phrase_diff = phrase_mean - lag(phrase_mean)) %>%
+  ggplot(aes(x=factor(phrase),y=phrase_diff)) +
+    geom_bar(stat="identity") +
+    facet_wrap(~ subject, ncol = 2, labeller = labeller(subject = subj_labels)) +
+    labs(x="Phrase Number",y="Difference in Mean Amplitude (Spoken-Silent)",
+         title="Ch4: Difference in Mean Amplitude Between Conditions by Phrase")
+png(file='ch4_diff_mean_amp.png')
+p4_2
+dev.off()
 ```
