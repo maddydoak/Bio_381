@@ -58,6 +58,8 @@ View(all_data)
 ```
 
 ```{r}
+# Graphs by channel
+
 subj_labels <- c("Subject 1", "Subject 2", "Subject 3", "Subject 4", "Subject 5")
 names(subj_labels) <- c("1","2","3","4","5")
 
@@ -186,4 +188,137 @@ p4_2 <- all_data %>%
 png(file='ch4_diff_mean_amp.png')
 p4_2
 dev.off()
+```
+
+```{r}
+# Graphs by subject
+subj_labels <- c("Subject 1", "Subject 2", "Subject 3", "Subject 4", "Subject 5")
+names(subj_labels) <- c("1","2","3","4","5")
+
+library(reshape2)
+# Subject 1
+p_sub1 <- all_data %>% 
+  filter(subject == 1) %>%
+  group_by(phrase,spoken) %>%
+  summarize(Ch1_mean = mean(as.numeric(Ch1_amp),na.rm=TRUE),
+            Ch2_mean = mean(as.numeric(Ch2_amp),na.rm=TRUE),
+            Ch3_mean = mean(as.numeric(Ch3_amp),na.rm=TRUE),
+            Ch4_mean = mean(as.numeric(Ch4_amp),na.rm=TRUE)) %>%
+  mutate(Ch1_diff = Ch1_mean - lag(Ch1_mean),
+         Ch2_diff = Ch2_mean - lag(Ch2_mean),
+         Ch3_diff = Ch3_mean - lag(Ch3_mean),
+         Ch4_diff = Ch4_mean - lag(Ch4_mean))
+p_sub1_m <- melt(p_sub1[,c('phrase','Ch1_diff','Ch2_diff','Ch3_diff','Ch4_diff')],id.vars=1)
+png(file='sbj1_diff_mean_amp.png')
+ggplot(p_sub1_m, aes(x=factor(phrase), y=value)) +
+    geom_bar(aes(fill=variable),stat="identity",position="dodge") +
+    labs(x="Phrase Number",y="Difference in Mean Amplitude (Spoken-Silent)",
+         title="Subject 1: Diff in Mean Amplitude Between Conditions by Phrase",
+         fill="Muscle")
+dev.off()
+
+# Subject 2
+p_sub2 <- all_data %>% 
+  filter(subject == 2) %>%
+  group_by(phrase,spoken) %>%
+  summarize(Ch1_mean = mean(as.numeric(Ch1_amp),na.rm=TRUE),
+            Ch2_mean = mean(as.numeric(Ch2_amp),na.rm=TRUE),
+            Ch3_mean = mean(as.numeric(Ch3_amp),na.rm=TRUE),
+            Ch4_mean = mean(as.numeric(Ch4_amp),na.rm=TRUE)) %>%
+  mutate(Ch1_diff = Ch1_mean - lag(Ch1_mean),
+         Ch2_diff = Ch2_mean - lag(Ch2_mean),
+         Ch3_diff = Ch3_mean - lag(Ch3_mean),
+         Ch4_diff = Ch4_mean - lag(Ch4_mean))
+p_sub2_m <- melt(p_sub2[,c('phrase','Ch1_diff','Ch2_diff','Ch3_diff','Ch4_diff')],id.vars=1)
+png(file='sbj2_diff_mean_amp.png')
+ggplot(p_sub2_m, aes(x=factor(phrase), y=value)) +
+    geom_bar(aes(fill=variable),stat="identity",position="dodge") +
+    labs(x="Phrase Number",y="Difference in Mean Amplitude (Spoken-Silent)",
+         title="Subject 2: Diff in Mean Amplitude Between Conditions by Phrase",
+         fill="Muscle")
+dev.off()
+
+# Subject 3
+p_sub3 <- all_data %>% 
+  filter(subject == 3) %>%
+  group_by(phrase,spoken) %>%
+  summarize(Ch1_mean = mean(as.numeric(Ch1_amp),na.rm=TRUE),
+            Ch2_mean = mean(as.numeric(Ch2_amp),na.rm=TRUE),
+            Ch3_mean = mean(as.numeric(Ch3_amp),na.rm=TRUE),
+            Ch4_mean = mean(as.numeric(Ch4_amp),na.rm=TRUE)) %>%
+  mutate(Ch1_diff = Ch1_mean - lag(Ch1_mean),
+         Ch2_diff = Ch2_mean - lag(Ch2_mean),
+         Ch3_diff = Ch3_mean - lag(Ch3_mean),
+         Ch4_diff = Ch4_mean - lag(Ch4_mean))
+p_sub3_m <- melt(p_sub3[,c('phrase','Ch1_diff','Ch2_diff','Ch3_diff','Ch4_diff')],id.vars=1)
+png(file='sbj3_diff_mean_amp.png')
+ggplot(p_sub3_m, aes(x=factor(phrase), y=value)) +
+    geom_bar(aes(fill=variable),stat="identity",position="dodge") +
+    labs(x="Phrase Number",y="Difference in Mean Amplitude (Spoken-Silent)",
+         title="Subject 3: Diff in Mean Amplitude Between Conditions by Phrase",
+         fill="Muscle")
+dev.off()
+
+# Subject 4
+p_sub4 <- all_data %>% 
+  filter(subject == 4) %>%
+  group_by(phrase,spoken) %>%
+  summarize(Ch1_mean = mean(as.numeric(Ch1_amp),na.rm=TRUE),
+            Ch2_mean = mean(as.numeric(Ch2_amp),na.rm=TRUE),
+            Ch3_mean = mean(as.numeric(Ch3_amp),na.rm=TRUE),
+            Ch4_mean = mean(as.numeric(Ch4_amp),na.rm=TRUE)) %>%
+  mutate(Ch1_diff = Ch1_mean - lag(Ch1_mean),
+         Ch2_diff = Ch2_mean - lag(Ch2_mean),
+         Ch3_diff = Ch3_mean - lag(Ch3_mean),
+         Ch4_diff = Ch4_mean - lag(Ch4_mean))
+p_sub4_m <- melt(p_sub4[,c('phrase','Ch1_diff','Ch2_diff','Ch3_diff','Ch4_diff')],id.vars=1)
+png(file='sbj4_diff_mean_amp.png')
+ggplot(p_sub4_m, aes(x=factor(phrase), y=value)) +
+    geom_bar(aes(fill=variable),stat="identity",position="dodge") +
+    labs(x="Phrase Number",y="Difference in Mean Amplitude (Spoken-Silent)",
+         title="Subject 4: Diff in Mean Amplitude Between Conditions by Phrase",
+         fill="Muscle")
+dev.off()
+
+# Subject 5
+p_sub5 <- all_data %>% 
+  filter(subject == 5) %>%
+  group_by(phrase,spoken) %>%
+  summarize(Ch1_mean = mean(as.numeric(Ch1_amp),na.rm=TRUE),
+            Ch2_mean = mean(as.numeric(Ch2_amp),na.rm=TRUE),
+            Ch3_mean = mean(as.numeric(Ch3_amp),na.rm=TRUE),
+            Ch4_mean = mean(as.numeric(Ch4_amp),na.rm=TRUE)) %>%
+  mutate(Ch1_diff = Ch1_mean - lag(Ch1_mean),
+         Ch2_diff = Ch2_mean - lag(Ch2_mean),
+         Ch3_diff = Ch3_mean - lag(Ch3_mean),
+         Ch4_diff = Ch4_mean - lag(Ch4_mean))
+p_sub5_m <- melt(p_sub5[,c('phrase','Ch1_diff','Ch2_diff','Ch3_diff','Ch4_diff')],id.vars=1)
+png(file='sbj5_diff_mean_amp.png')
+ggplot(p_sub5_m, aes(x=factor(phrase), y=value)) +
+    geom_bar(aes(fill=variable),stat="identity",position="dodge") +
+    labs(x="Phrase Number",y="Difference in Mean Amplitude (Spoken-Silent)",
+         title="Subject 1: Diff in Mean Amplitude Between Conditions by Phrase",
+         fill="Muscle")
+dev.off()
+
+# Phrase 1
+p_phrs1 <- all_data %>% 
+  filter(phrase==1) %>%
+  group_by(subject,spoken) %>%
+  mutate(M1 = mean(as.numeric(Ch1_amp),na.rm=TRUE),
+          M2 = mean(as.numeric(Ch2_amp),na.rm=TRUE),
+          M3 = mean(as.numeric(Ch3_amp),na.rm=TRUE),
+          M4 = mean(as.numeric(Ch4_amp),na.rm=TRUE))
+p_phrs1_m <- melt(p_phrs1[,c('subject','spoken','M1','M2','M3','M4')],id.vars=c(1,2))
+png(file='phrs1_mean_amp.png')
+ggplot(p_phrs1_m, aes(x=factor(variable), y=value)) +
+    geom_bar(aes(fill=spoken),stat="identity",position="dodge") +
+    facet_wrap(~subject, ncol=2, labeller = labeller(subject = subj_labels)) +
+    labs(x="Muscle",y="Mean Amplitude (mV)",
+         title="Phrase 1: Mean Amplitude Between Conditions by Subject",
+         fill="Vocalized")
+dev.off()
+```
+
+```{r}
 ```
