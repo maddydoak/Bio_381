@@ -67,14 +67,21 @@ names(subj_labels) <- c("1","2","3","4","5")
 p1_1 <- all_data %>% 
   group_by(subject,phrase,spoken) %>%
   filter(!is.na(Ch1_amp)) %>%
-  summarize(phrase_mean = mean(as.numeric(Ch1_amp),na.rm=TRUE)) %>%
-  ggplot(aes(x=factor(phrase),y=phrase_mean,fill=spoken)) +
+  summarize(phrase_mean = mean(as.numeric(Ch1_amp),na.rm=TRUE))
+
+res.aov.ch1 <- aov(phrase_mean ~ spoken, data=p1_1)
+summary(res.aov.ch1)
+
+res.aov2.ch1 <- aov(phrase_mean ~ spoken * phrase, data=p1_1)
+summary(res.aov2.ch1)
+
+p1_1_plot <- p1_1 %>% ggplot(aes(x=factor(phrase),y=phrase_mean,fill=spoken)) +
     geom_bar(position="dodge",stat="identity") +
     facet_wrap(~ subject, ncol = 2, labeller = labeller(subject = subj_labels)) +
     labs(x="Phrase Number",y="Mean Amplitude for Phrase (mV)",
          title="Ch1: Mean Amplitude by Subject/Phrase/Vocalization Condition")
 png(file='ch1_mean_amp_by_conditions.png')
-p1_1
+p1_1_plot
 dev.off()
 p1_2 <- all_data %>% 
   group_by(subject,phrase,spoken) %>%
@@ -92,16 +99,24 @@ dev.off()
 
 # Channel 2
 p2_1 <- all_data %>% 
+  filter(subject != 4) %>%
   group_by(subject,phrase,spoken) %>%
   filter(!is.na(Ch2_amp)) %>%
-  summarize(phrase_mean = mean(as.numeric(Ch2_amp),na.rm=TRUE)) %>%
-  ggplot(aes(x=factor(phrase),y=phrase_mean,fill=spoken)) +
+  summarize(phrase_mean = mean(as.numeric(Ch2_amp),na.rm=TRUE))
+
+res.aov.ch2 <- aov(phrase_mean ~ spoken, data=p2_1)
+summary(res.aov.ch2)
+
+res.aov2.ch2 <- aov(phrase_mean ~ spoken * phrase, data=p2_1)
+summary(res.aov2.ch2)
+
+p2_1_plot <- p2_1 %>% ggplot(aes(x=factor(phrase),y=phrase_mean,fill=spoken)) +
     geom_bar(position="dodge",stat="identity") +
     facet_wrap(~ subject, ncol = 2, labeller = labeller(subject = subj_labels)) +
     labs(x="Phrase Number",y="Mean Amplitude for Phrase (mV)",
          title="Ch2: Mean Amplitude by Subject/Phrase/Vocalization Condition")
 png(file='ch2_mean_amp_by_conditions.png')
-p2_1
+p2_1_plot
 dev.off()
 p2_2 <- all_data %>% 
   group_by(subject,phrase,spoken) %>%
@@ -123,6 +138,13 @@ p3 <- all_data %>%
   filter(!is.na(Ch3_amp)) %>%
   summarize(phrase_mean = mean(as.numeric(Ch3_amp),na.rm=TRUE))  %>%
   mutate(phrase_diff = phrase_mean - lag(phrase_mean))
+
+res.aov.ch3 <- aov(phrase_mean ~ spoken, data=p3)
+summary(res.aov.ch3)
+
+res.aov2.ch3 <- aov(phrase_mean ~ spoken * phrase, data=p3)
+summary(res.aov2.ch3)
+
 p3_1 <- p3 %>% ggplot(aes(x=factor(phrase),y=phrase_mean,fill=spoken)) +
     geom_bar(position="dodge",stat="identity") +
     facet_wrap(~ subject, ncol = 2, labeller = labeller(subject = subj_labels)) +
@@ -166,14 +188,22 @@ dev.off()
 p4_1 <- all_data %>% 
   group_by(subject,phrase,spoken) %>%
   filter(!is.na(Ch4_amp)) %>%
-  summarize(phrase_mean = mean(as.numeric(Ch4_amp),na.rm=TRUE)) %>%
-  ggplot(aes(x=factor(phrase),y=phrase_mean,fill=spoken)) +
+  summarize(phrase_mean = mean(as.numeric(Ch4_amp),na.rm=TRUE))
+
+# ANOVA channel 4:
+res.aov.ch4 <- aov(phrase_mean ~ spoken, data=p4_1)
+summary(res.aov.ch4)
+
+res.aov2.ch4 <- aov(phrase_mean ~ spoken * phrase, data=p4_1)
+summary(res.aov2.ch4)
+
+p4_1_plot <- p4_1 %>% ggplot(aes(x=factor(phrase),y=phrase_mean,fill=spoken)) +
     geom_bar(position="dodge",stat="identity") +
     facet_wrap(~ subject, ncol = 2, labeller = labeller(subject = subj_labels)) +
     labs(x="Phrase Number",y="Mean Amplitude for Phrase (mV)",
          title="Ch4: Mean Amplitude by Subject/Phrase/Vocalization Condition")
 png(file='ch4_mean_amp_by_conditions.png')
-p4_1
+p4_1_plot
 dev.off()
 p4_2 <- all_data %>% 
   group_by(subject,phrase,spoken) %>%
@@ -321,4 +351,55 @@ dev.off()
 ```
 
 ```{r}
+# Peak data
+# Channel 1, peaks above 10uV
+peak_ch1 <- as_tibble(read.csv2("/media/maddy/Seagate Portable Drive/git/Bio_381/group_IP/peaks_reformat.csv", header=TRUE, sep=","))
+peak_ch1$Time_sec <- as.double(as.character(peak_ch1$Time_sec))
+peak_ch1$voltage_microv <- as.double(as.character(peak_ch1$voltage_microv))
+
+norm_factor <- peak_ch1 %>% 
+  group_by(phrase,vocalization) %>%
+  summarize(start_time = min(Time_sec)) %>%
+  mutate(time_diff = start_time - lag(start_time)) %>%
+  filter(vocalization == "spoken")
+View(norm_factor)
+
+normalized <- peak_ch1 %>%
+  filter(vocalization == "spoken") %>%
+  group_by(phrase) %>%
+  mutate(new_time = Time_sec - norm_factor$time_diff[phrase])
+normalized <- as_tibble(normalized)
+View(normalized)
+
+just_silent <- peak_ch1 %>% filter(vocalization == "silent") %>% mutate(new_time = Time_sec)
+just_silent <- as_tibble(just_silent)
+View(just_silent)
+
+normalized_all <- as_tibble(rbind(normalized,just_silent))
+View(normalized_all)
+
+peak_ch1 %>% 
+  group_by(phrase,vocalization) %>% 
+  summarise(num_peaks = n())
+
+all_phrase <- normalized_all %>% 
+  group_by(phrase,vocalization) %>% 
+  ggplot(aes(x=new_time, y=voltage_microv, color=factor(vocalization))) +
+  geom_line(stat="identity") +
+  facet_wrap(~ phrase) +
+  labs(x="Time (sec)", y="Voltage (uV)", title="Peak heights by normalized start time", color="Vocalization")
+png(filename = "all_phrases.png")
+all_phrase
+dev.off()
+
+best_phrase <- normalized_all %>% 
+  filter(phrase==2 | phrase==4 | phrase==5) %>%
+  group_by(phrase,vocalization) %>% 
+  ggplot(aes(x=new_time, y=voltage_microv, color=factor(vocalization))) +
+  geom_line(stat="identity") +
+  facet_wrap(~ phrase, ncol=2) +
+  labs(x="Time (sec)", y="Voltage (uV)", title="Peak heights by normalized start time", color="Vocalization")
+png(filename = "best_phrases.png")
+best_phrase
+dev.off()
 ```
