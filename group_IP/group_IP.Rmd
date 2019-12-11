@@ -378,10 +378,6 @@ View(just_silent)
 normalized_all <- as_tibble(rbind(normalized,just_silent))
 View(normalized_all)
 
-peak_ch1 %>% 
-  group_by(phrase,vocalization) %>% 
-  summarise(num_peaks = n())
-
 all_phrase <- normalized_all %>% 
   group_by(phrase,vocalization) %>% 
   ggplot(aes(x=new_time, y=voltage_microv, color=factor(vocalization))) +
@@ -401,5 +397,90 @@ best_phrase <- normalized_all %>%
   labs(x="Time (sec)", y="Voltage (uV)", title="Peak heights by normalized start time", color="Vocalization")
 png(filename = "best_phrases.png")
 best_phrase
+dev.off()
+
+all_phrase_together <- normalized_all %>% 
+  group_by(phrase,vocalization) %>% 
+  ggplot(aes(x=new_time, y=factor(phrase), color=factor(vocalization))) +
+  geom_point() +
+  labs(x="Time (sec)", y="Phrase", title="Peak heights by normalized start time", color="Vocalization")
+png(filename = "all_phrases.png")
+all_phrase_together
+dev.off()
+
+# Phrase 1 only data
+
+peak_phrase1 <- as_tibble(read.csv2("/media/maddy/Seagate Portable Drive/git/Bio_381/group_IP/reformat2_phrase1.csv", header=TRUE, sep=","))
+View(peak_phrase1)
+peak_phrase1$subject <- as.numeric(as.character(peak_phrase1$subject))
+peak_phrase1$vocalization <- as.character(peak_phrase1$vocalization)
+peak_phrase1$time <- as.double(as.character(peak_phrase1$time))
+peak_phrase1$voltage <- as.double(as.character(peak_phrase1$voltage))
+
+alt_norm_p_spoken <- peak_phrase1 %>% 
+  filter(vocalization == "spoken") %>%
+  group_by(subject) %>%
+  summarize(start_time = min(time))
+alt_normalized_p_spoken <- peak_phrase1 %>%
+  filter(vocalization == "spoken") %>%
+  group_by(subject) %>%
+  mutate(norm_time = time - alt_norm_p_spoken$start_time[subject])
+alt_normalized_p_spoken <- as_tibble(alt_normalized_p_spoken)
+
+alt_norm_p_silent <- peak_phrase1 %>% 
+  filter(vocalization == "silent") %>%
+  group_by(subject) %>%
+  summarize(start_time = min(time))
+alt_normalized_p_silent <- peak_phrase1 %>%
+  filter(vocalization == "silent") %>%
+  group_by(subject) %>%
+  mutate(norm_time = time - alt_norm_p_silent$start_time[subject])
+alt_normalized_p_silent <- as_tibble(alt_normalized_p_silent)
+
+alt_normalized_all <- as_tibble(rbind(alt_normalized_p_spoken, alt_normalized_p_silent))
+
+norm_factor_p <- peak_phrase1 %>% 
+  group_by(subject,vocalization) %>%
+  summarize(start_time = min(time)) %>%
+  mutate(time_diff = start_time - lag(start_time)) %>%
+  filter(vocalization == "spoken")
+
+normalized_p <- peak_phrase1 %>%
+  filter(vocalization == "spoken") %>%
+  group_by(subject) %>%
+  mutate(new_time = time - norm_factor_p$time_diff[subject])
+normalized_p <- as_tibble(normalized_p)
+
+just_silent_p <- peak_phrase1 %>% filter(vocalization == "silent") %>% mutate(new_time = time)
+just_silent_p <- as_tibble(just_silent_p)
+
+normalized_all_p <- as_tibble(rbind(normalized_p,just_silent_p))
+View(normalized_all_p)
+
+phrase_1 <- normalized_all_p %>%
+  group_by(subject,vocalization) %>%
+  ggplot(aes(x=new_time, y=voltage, color=factor(vocalization))) +
+  geom_point() +
+  facet_wrap(~ subject, ncol=2)
+  labs(x="Time (sec)", y="Subject", title="Peak heights by normalized start time", color="Vocalization")
+phrase_1
+
+phrase_1_alt <- alt_normalized_all %>%
+  group_by(subject,vocalization) %>%
+  ggplot(aes(x=norm_time, y=factor(subject), color=factor(vocalization))) +
+  geom_point() +
+  labs(x="Time (sec)", y="Subject", title="Peak heights by normalized start time", color="Vocalization")
+png(filename = "phrase_1_allsubj.png")
+phrase_1_alt
+dev.off()
+
+phrase_1_alt_line <- alt_normalized_all %>%
+  group_by(subject,vocalization) %>%
+  ggplot(aes(x=norm_time, y=voltage, color=factor(vocalization))) +
+  geom_line(stat="identity") +
+  facet_wrap(~ subject, ncol=2) +
+  labs(x="Time (sec)", y="Subject", title="Peak heights by normalized start time", color="Vocalization")
+png(filename = "phrase_1_lines.png")
+phrase_1_alt_line
 dev.off()
 ```
